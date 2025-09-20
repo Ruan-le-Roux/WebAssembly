@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>WASM Drawing Board</title>
+        <style>
+        body {
+            margin:0;
+            padding:0;
+            overflow:hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f0f5;
+        }
+
+        /* Drawing canvas fills window */
+        canvas {
+            display:block;
+            width:100%;
+            height:100%;
+            image-rendering: pixelated;
+            position: absolute;
+            top:0;
+            left:0;
+            z-index:1;
+        }
+
+        /* Brush pointer canvas on top */
+        #cursorCanvas {
+            position: absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            pointer-events: none;
+            z-index:200;
+        }
+
+        /* Section with headings always on top */
+        section {
+            position: fixed;
+            top:10px;
+            left:50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            text-align: center;
+            background: rgba(255,255,255,0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        section h1 { margin:0; font-size:28px; color:#333; }
+        section h2 { margin:5px 0 0 0; font-size:20px; color:#333; }
+        section h3 { margin:5px 0 0 0; font-size:16px; color:#555; }
+
+        #controls {
+            position: fixed;
+            top: 150px;
+            left: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 101;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 200px;
+        }
+
+        #controls label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        #controls input[type="color"],
+        #controls select {
+            padding: 5px 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            margin-left: 10px;
+            flex-grow: 1;
+        }
+
+        #controls input[type="range"]
+        {
+            /* padding: 5px 8px; */
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            margin-left: 10px;
+            flex-grow: 1;
+
+        }
+
+
+        #controls button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #controls button:hover { background-color: #357ab8; }
+        </style>
+    </head>
+    <body>
+
+        <section>
+            <h1>Drawing Canvas</h1>
+            <h2>Click anywhere to start drawing</h2>
+            <h3>Select color, size, and tool!</h3>
+        </section>
+
+        <div id="controls">
+            <label>Color: <input type="color" id="colorPicker" value="#0000ff"></label>
+
+            <label>Size: 
+                <input type="range" id="brushSize" min="1" max="50" value="5">
+                <span id="brushSizeDisplay">5</span>
+            </label>
+
+            <label>Tool:
+                <select id="toolSelect">
+                    <option value="pen">Pen</option>
+                    <option value="eraser">Eraser</option>
+                </select>
+            </label>
+
+            <button id="clearBtn">Clear Canvas</button>
+        </div>
+
+        <canvas id="canvas"></canvas>
+        <canvas id="cursorCanvas"></canvas>
+
+        <script src="drawing.js"></script>
+        <script>
+            Module.onRuntimeInitialized = function() 
+            {
+                function updateBlockedRect() 
+                {
+                blockedRect = section.getBoundingClientRect();
+            }
+
+            window.addEventListener('resize', updateBlockedRect);
+            const canvas = document.getElementById('canvas');
+            const cursorCanvas = document.getElementById('cursorCanvas');
+            const ctx = canvas.getContext('2d');
+            const cursorCtx = cursorCanvas.getContext('2d');
+
+            function resizeCanvas() 
+            {
+                canvas.width = cursorCanvas.width = window.innerWidth;
+                canvas.height = cursorCanvas.height = window.innerHeight;
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            const init = Module.cwrap('init', null, ['number','number']);
+            const draw_circle = Module.cwrap('draw_circle', null, ['number','number','number','number','number','number','number']);
+            const get_pixels = Module.cwrap('get_pixels', 'number', []);
+            const clear_pixels = Module.cwrap('clear_pixels', null, ['number','number','number','number']);
+
+            init(canvas.width, canvas.height);
+
+            const colorPicker = document.getElementById('colorPicker');
+            const brushSizeInput = document.getElementById('brushSize');
+            const brushSizeDisplay = document.getElementById('brushSizeDisplay');
+            const toolSelect = document.getElementById('toolSelect');
+            const clearBtn = document.getElementById('clearBtn');
+            const section = document.querySelector('section');
+            const blockedRect = section.getBoundingClientRect();
+
+            let drawing = false;
+            let lastX = 0, lastY = 0;
+            let needsRender = true;
+
+            brushSizeInput.addEventListener('input', () => {
+                brushSizeDisplay.textContent = brushSizeInput.value;
+            });
+
+            function hexToRGBA(hex)
+            {
+                const bigint = parseInt(hex.slice(1), 16);
+                return [(bigint>>16)&255, (bigint>>8) & 255, bigint & 255, 255];
+            }
+
+            function drawBrush(x, y, r, g, b, a, size)
+            {
+                draw_circle(x, y, size, r, g, b, a);
+            }
+
+            function scheduleRender()
+            {
+                if(!needsRender)
+                {
+                    needsRender = true;
+                    requestAnimationFrame(render);
+                }
+            }
+
+            function render()
+            {
+                const pixelsPtr = get_pixels();
+                const width = canvas.width;
+                const height = canvas.height;
+                const wasmPixels = new Uint8ClampedArray(Module.HEAPU8.buffer, pixelsPtr, width * height *  4);
+
+                const imageData = ctx.createImageData(width, height);
+                imageData.data.set(wasmPixels); 
+                ctx.putImageData(imageData, 0, 0);
+
+                needsRender = false;
+            }
+
+            clearBtn.addEventListener('click', () => {
+                clear_pixels(240, 240, 245);
+                scheduleRender();
+            });
+
+            function isInBlockedArea(x,y)
+            {
+                return x >= blockedRect.left && x <= blockedRect.right && y >= blockedRect.top && y <= blockedRect.bottom;
+            }
+
+            canvas.addEventListener('mousedown', e => {
+                drawing = true;
+                const rect = canvas.getBoundingClientRect();
+                lastX = Math.floor(e.clientX - rect.left);
+                lastY = Math.floor(e.clientY - rect.top);
+            });
+
+            canvas.addEventListener('mousemove', e => {
+                const rect = canvas.getBoundingClientRect();
+                const x = Math.floor(e.clientX - rect.left);
+                const y = Math.floor(e.clientY - rect.top);
+
+                cursorCtx.clearRect(0,0,cursorCanvas.width,cursorCanvas.height);
+                const size = parseInt(brushSizeInput.value);
+                cursorCtx.beginPath();
+                cursorCtx.arc(x, y, size, 0, Math.PI*2);
+                cursorCtx.strokeStyle = toolSelect.value === 'pen' ? colorPicker.value : '#fff';
+                cursorCtx.lineWidth = 1;
+                cursorCtx.stroke();
+
+                if(drawing && (e.buttons & 1))
+                {
+                    const dx = x - lastX;
+                    const dy = y - lastY;
+                    const steps = Math.max(Math.abs(dx), Math.abs(dy));
+
+                    let r,g,b,a;
+
+                    if(toolSelect.value === 'pen')
+                    {
+                        [r,g,b,a] = hexToRGBA(colorPicker.value);
+                    } 
+                    else 
+                    {
+                        [r,g,b,a] = [240, 240, 245];
+                    }
+
+                    for(let i = 0; i <= steps; i ++)
+                    {
+                        const px = lastX + Math.round((dx * i) / steps);
+                        const py = lastY + Math.round((dy * i) / steps);
+                        if(!isInBlockedArea(px, py))
+                        {
+                            drawBrush(px, py, r, g, b, a, size);
+                        }
+                    }
+
+                    lastX = x;
+                    lastY = y;
+                    scheduleRender();
+                }
+            });
+
+            canvas.addEventListener('mouseup', () => drawing = false);
+            canvas.addEventListener('mouseleave', () => {});
+            canvas.addEventListener('mouseenter', e=> {
+                if(e.buttons & 1)
+                { 
+                    const rect = canvas.getBoundingClientRect();
+                    lastX = Math.floor(e.clientX - rect.left);
+                    lastY = Math.floor(e.clientY - rect.top);
+                    drawing = true; 
+                }
+            });
+
+            render();
+        };
+        </script>
+    </body>
+</html>
