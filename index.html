@@ -4,111 +4,134 @@
         <meta charset="UTF-8">
         <title>WASM Drawing Board</title>
         <style>
-        body {
-            margin:0;
-            padding:0;
-            overflow:hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f0f5;
-        }
+            body 
+            {
+                margin:0;
+                padding:0;
+                overflow:hidden;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: #f0f0f5;
+            }
 
-        /* Drawing canvas fills window */
-        canvas {
-            display:block;
-            width:100%;
-            height:100%;
-            image-rendering: pixelated;
-            position: absolute;
-            top:0;
-            left:0;
-            z-index:1;
-        }
+            canvas 
+            {
+                display:block;
+                width:100%;
+                height:100%;
+                image-rendering: pixelated;
+                position: absolute;
+                top:0;
+                left:0;
+                z-index:1;
+            }
 
-        /* Brush pointer canvas on top */
-        #cursorCanvas {
-            position: absolute;
-            top:0;
-            left:0;
-            width:100%;
-            height:100%;
-            pointer-events: none;
-            z-index:200;
-        }
+            #cursorCanvas 
+            {
+                position: absolute;
+                top:0;
+                left:0;
+                width:100%;
+                height:100%;
+                pointer-events: none;
+                z-index:200;
+            }
 
-        /* Section with headings always on top */
-        section {
-            position: fixed;
-            top:10px;
-            left:50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            text-align: center;
-            background: rgba(255,255,255,0.8);
-            padding: 10px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+            section 
+            {
+                position: fixed;
+                top:10px;
+                left:50%;
+                transform: translateX(-50%);
+                z-index: 100;
+                text-align: center;
+                background: rgba(255,255,255,0.8);
+                padding: 10px 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
 
-        section h1 { margin:0; font-size:28px; color:#333; }
-        section h2 { margin:5px 0 0 0; font-size:20px; color:#333; }
-        section h3 { margin:5px 0 0 0; font-size:16px; color:#555; }
+            section h1 
+            { 
+                margin:0; 
+                font-size:28px; 
+                color:#333; 
+            }
 
-        #controls {
-            position: fixed;
-            top: 150px;
-            left: 15px;
-            background: rgba(255,255,255,0.95);
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 101;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            min-width: 200px;
-        }
+            section h2 
+            { 
+                margin:5px 0 0 0; 
+                font-size:20px; 
+                color:#333; 
+            }
 
-        #controls label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 500;
-        }
+            section h3 
+            { 
+                margin:5px 0 0 0; 
+                font-size:16px; 
+                color:#555; 
+            }
 
-        #controls input[type="color"],
-        #controls select {
-            padding: 5px 8px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            margin-left: 10px;
-            flex-grow: 1;
-        }
+            #controls 
+            {
+                position: fixed;
+                top: 150px;
+                left: 15px;
+                background: rgba(255,255,255,0.95);
+                padding: 15px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 101;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-width: 200px;
+            }
 
-        #controls input[type="range"]
-        {
-            /* padding: 5px 8px; */
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            margin-left: 10px;
-            flex-grow: 1;
+            #controls label 
+            {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-weight: 500;
+            }
 
-        }
+            #controls input[type="color"],
+            #controls select 
+            {
+                padding: 5px 8px;
+                border-radius: 6px;
+                border: 1px solid #ccc;
+                font-size: 14px;
+                margin-left: 10px;
+                flex-grow: 1;
+            }
 
+            #controls input[type="range"]
+            {
+                border-radius: 6px;
+                border: 1px solid #ccc;
+                font-size: 14px;
+                margin-left: 10px;
+                flex-grow: 1;
 
-        #controls button {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+            }
 
-        #controls button:hover { background-color: #357ab8; }
+            #controls button 
+            {
+                background-color: #4a90e2;
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 8px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            #controls button:hover 
+            { 
+                background-color: #357ab8; 
+            }
         </style>
     </head>
     <body>
@@ -120,84 +143,127 @@
         </section>
 
         <div id="controls">
-            <label>Color: <input type="color" id="colorPicker" value="#0000ff"></label>
-
-            <label>Size: 
-                <input type="range" id="brushSize" min="1" max="50" value="5">
-                <span id="brushSizeDisplay">5</span>
+            <!-- Color picker input -->
+            <label>
+                Color: <input type="color" id="colorPicker" value="#0000ff">
             </label>
 
-            <label>Tool:
+            <!-- Brush size slider -->
+            <label>
+                Size: 
+                <input type="range" id="brushSize" min="1" max="50" value="5">
+
+                <!-- Shows current brush size -->
+                <span id="brushSizeDisplay">5</span> 
+            </label>
+
+            <!-- Tool selection dropdown -->
+            <label>
+                Tool:
                 <select id="toolSelect">
                     <option value="pen">Pen</option>
                     <option value="eraser">Eraser</option>
                 </select>
             </label>
 
+            <!-- Button to clear the canvas -->
             <button id="clearBtn">Clear Canvas</button>
         </div>
 
+        <!-- Main drawing canvas -->
         <canvas id="canvas"></canvas>
+
+        <!-- Overlay canvas for brush cursor preview -->
         <canvas id="cursorCanvas"></canvas>
 
+        <!-- Load the compiled WASM module -->
         <script src="drawing.js"></script>
-        <script>
-            Module.onRuntimeInitialized = function() 
+
+    <script>
+        // Wait until the WASM runtime is initialized
+        Module.onRuntimeInitialized = function() 
+        {
+            // Update blocked area (section) for mouse input
+            function updateBlockedRect() 
             {
-                function updateBlockedRect() 
-                {
                 blockedRect = section.getBoundingClientRect();
             }
 
+            // Update blockedRect whenever window resizes
             window.addEventListener('resize', updateBlockedRect);
+
+            // Get references to canvas elements and contexts
             const canvas = document.getElementById('canvas');
             const cursorCanvas = document.getElementById('cursorCanvas');
-            const ctx = canvas.getContext('2d');
-            const cursorCtx = cursorCanvas.getContext('2d');
 
+            // For main drawing
+            const ctx = canvas.getContext('2d');          
+            
+            // For brush cursor overlay
+            const cursorCtx = cursorCanvas.getContext('2d'); 
+
+            // Function to resize both canvases to match window size
             function resizeCanvas() 
             {
                 canvas.width = cursorCanvas.width = window.innerWidth;
                 canvas.height = cursorCanvas.height = window.innerHeight;
             }
 
-            resizeCanvas();
+            // Initial resize
+            resizeCanvas(); 
             window.addEventListener('resize', resizeCanvas);
 
-            const init = Module.cwrap('init', null, ['number','number']);
-            const draw_circle = Module.cwrap('draw_circle', null, ['number','number','number','number','number','number','number']);
-            const get_pixels = Module.cwrap('get_pixels', 'number', []);
-            const clear_pixels = Module.cwrap('clear_pixels', null, ['number','number','number','number']);
+            // Bind JavaScript functions to WASM C++ functions
+            // Initialize pixel buffer
+            const init = Module.cwrap('init', null, ['number','number']);   
 
+            // Draw brush                
+            const draw_circle = Module.cwrap('draw_circle', null, ['number','number','number','number','number','number','number']); 
+
+            // Get pixel buffer pointer
+            const get_pixels = Module.cwrap('get_pixels', 'number', []); 
+            
+            // Clear canvas
+            const clear_pixels = Module.cwrap('clear_pixels', null, ['number','number','number','number']); 
+
+            // Initialize WASM pixel buffer with canvas dimensions
             init(canvas.width, canvas.height);
 
+            // DOM references for controls
             const colorPicker = document.getElementById('colorPicker');
             const brushSizeInput = document.getElementById('brushSize');
             const brushSizeDisplay = document.getElementById('brushSizeDisplay');
             const toolSelect = document.getElementById('toolSelect');
             const clearBtn = document.getElementById('clearBtn');
             const section = document.querySelector('section');
-            let blockedRect = section.getBoundingClientRect();
 
-            let drawing = false;
-            let lastX = 0, lastY = 0;
-            let needsRender = true;
+            // Area where drawing is blocked
+            let blockedRect = section.getBoundingClientRect(); 
 
+            // Drawing state variables
+            let drawing = false; // True while mouse is pressed
+            let lastX = 0, lastY = 0; // Last mouse coordinates
+            let needsRender = true; // Whether canvas needs to be re-rendered
+
+            // Update brush size display when slider changes
             brushSizeInput.addEventListener('input', () => {
                 brushSizeDisplay.textContent = brushSizeInput.value;
             });
 
+            // Convert hex color string (#RRGGBB) to RGBA array
             function hexToRGBA(hex)
             {
                 const bigint = parseInt(hex.slice(1), 16);
-                return [(bigint>>16)&255, (bigint>>8) & 255, bigint & 255, 255];
+                return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255];
             }
 
+            // Draw a brush stroke at (x,y) with color and size
             function drawBrush(x, y, r, g, b, a, size)
             {
                 draw_circle(x, y, size, r, g, b, a);
             }
 
+            // Schedule a render using requestAnimationFrame
             function scheduleRender()
             {
                 if(!needsRender)
@@ -207,30 +273,40 @@
                 }
             }
 
+            // Render pixel buffer to canvas
             function render()
             {
-                const pixelsPtr = get_pixels();
+                // Pointer to WASM pixel buffer
+                const pixelsPtr = get_pixels(); 
                 const width = canvas.width;
                 const height = canvas.height;
-                const wasmPixels = new Uint8ClampedArray(Module.HEAPU8.buffer, pixelsPtr, width * height *  4);
 
+                // Create a typed array view of WASM memory
+                const wasmPixels = new Uint8ClampedArray(Module.HEAPU8.buffer, pixelsPtr, width * height * 4);
+
+                // Create ImageData and copy pixels
                 const imageData = ctx.createImageData(width, height);
                 imageData.data.set(wasmPixels); 
                 ctx.putImageData(imageData, 0, 0);
 
-                needsRender = false;
+                // Rendering done
+                needsRender = false; 
             }
 
+            // Clear button event
             clearBtn.addEventListener('click', () => {
-                clear_pixels(240, 240, 245);
+                // Clear to background color
+                clear_pixels(240, 240, 245); 
                 scheduleRender();
             });
 
-            function isInBlockedArea(x,y)
+            // Check if a point is inside blocked UI section
+            function isInBlockedArea(x, y)
             {
                 return x >= blockedRect.left && x <= blockedRect.right && y >= blockedRect.top && y <= blockedRect.bottom;
             }
 
+            // Mouse pressed: start drawing
             canvas.addEventListener('mousedown', e => {
                 drawing = true;
                 const rect = canvas.getBoundingClientRect();
@@ -238,12 +314,14 @@
                 lastY = Math.floor(e.clientY - rect.top);
             });
 
+            // Mouse move: draw brush if pressed
             canvas.addEventListener('mousemove', e => {
                 const rect = canvas.getBoundingClientRect();
                 const x = Math.floor(e.clientX - rect.left);
                 const y = Math.floor(e.clientY - rect.top);
 
-                cursorCtx.clearRect(0,0,cursorCanvas.width,cursorCanvas.height);
+                // Draw brush cursor preview
+                cursorCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
                 const size = parseInt(brushSizeInput.value);
                 cursorCtx.beginPath();
                 cursorCtx.arc(x, y, size, 0, Math.PI*2);
@@ -251,31 +329,28 @@
                 cursorCtx.lineWidth = 1;
                 cursorCtx.stroke();
 
+                // Draw brush strokes if drawing
                 if(drawing && (e.buttons & 1))
                 {
                     const dx = x - lastX;
                     const dy = y - lastY;
                     const steps = Math.max(Math.abs(dx), Math.abs(dy));
 
-                    let r,g,b,a;
+                    let r, g, b, a;
 
                     if(toolSelect.value === 'pen')
-                    {
-                        [r,g,b,a] = hexToRGBA(colorPicker.value);
-                    } 
-                    else 
-                    {
-                        [r,g,b,a] = [240, 240, 245];
-                    }
+                        [r, g, b, a] = hexToRGBA(colorPicker.value);
+                    else
+                        // Eraser color
+                        [r, g, b, a] = [240, 240, 245]; 
 
-                    for(let i = 0; i <= steps; i ++)
+                    // Interpolate pixels along the line for smooth drawing
+                    for(let i = 0; i <= steps; i++)
                     {
                         const px = lastX + Math.round((dx * i) / steps);
                         const py = lastY + Math.round((dy * i) / steps);
                         if(!isInBlockedArea(px, py))
-                        {
                             drawBrush(px, py, r, g, b, a, size);
-                        }
                     }
 
                     lastX = x;
@@ -284,9 +359,13 @@
                 }
             });
 
+            // Stop drawing when mouse released
             canvas.addEventListener('mouseup', () => drawing = false);
+
+            // Handlers for mouse leaving/entering canvas
             canvas.addEventListener('mouseleave', () => {});
-            canvas.addEventListener('mouseenter', e=> {
+            
+            canvas.addEventListener('mouseenter', e => {
                 if(e.buttons & 1)
                 { 
                     const rect = canvas.getBoundingClientRect();
@@ -296,8 +375,8 @@
                 }
             });
 
+            // Initial render
             render();
         };
-        </script>
-    </body>
-</html>
+    </script>
+</body>

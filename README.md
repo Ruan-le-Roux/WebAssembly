@@ -10,3 +10,6 @@ python -m http.server 8080
 
 ### 3. View page
 http://localhost:8080/
+
+# Documentation download
+[Download the Introduction to WebAssembly PDF](docs/Intro_to_WebAssembly-Ruan_le_Roux.pdf)
