@@ -177,7 +177,7 @@
             const toolSelect = document.getElementById('toolSelect');
             const clearBtn = document.getElementById('clearBtn');
             const section = document.querySelector('section');
-            const blockedRect = section.getBoundingClientRect();
+            let blockedRect = section.getBoundingClientRect();
 
             let drawing = false;
             let lastX = 0, lastY = 0;
